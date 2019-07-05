@@ -1,4 +1,5 @@
 #include "CommonTools/MVAUtils/interface/GBRForestTools.h"
+#include "DataFormats/Common/interface/RefToPtr.h"
 #include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
 #include "DataFormats/EgammaReco/interface/SuperCluster.h"
 #include "DataFormats/EgammaReco/interface/SuperClusterFwd.h"
@@ -45,10 +46,16 @@ namespace lowptgsfeleid {
   ////////////////////////////////////////////////////////////////////////////////
   //
   void Features::set( const reco::GsfElectronRef& ele, double rho ) {
+    set(edm::refToPtr(ele),rho);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  //
+  void Features::set( const reco::GsfElectronPtr& ele, double rho ) {
 
     // KF tracks
     if ( ele->core().isNonnull() ) {
-      reco::TrackRef trk = ele->core()->ctfTrack(); //@@ is this what we want?!
+      reco::TrackRef trk = ele->closestCtfTrackRef();
       if ( trk.isNonnull() ) {
 	trk_p_ = float(trk->p());
 	trk_nhits_ = float(trk->found());
@@ -145,7 +152,7 @@ namespace lowptgsfeleid {
     if ( iter != names_.end() ) {
       int index = std::distance(names_.begin(),iter);
       Features features;
-      features.set(ele,rho);
+      features.set(reco::GsfElectronPtr(ele.id(),ele.get(),ele.key()),rho); //@@ Ref->Ptr
       std::vector<float> inputs = features.get();
       return models_.at(index)->GetResponse( inputs.data() );
     } else {
