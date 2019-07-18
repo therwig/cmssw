@@ -146,13 +146,22 @@ namespace lowptgsfeleid {
 				 const reco::GsfElectronRef& ele,
 				 double rho ) const
   {
+    return eval(name,edm::refToPtr(ele),rho);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  //
+  double HeavyObjectCache::eval( const std::string& name,
+				 const reco::GsfElectronPtr& ele,
+				 double rho ) const
+  {
     std::vector<std::string>::const_iterator iter = std::find( names_.begin(), 
 							       names_.end(), 
 							       name );
     if ( iter != names_.end() ) {
       int index = std::distance(names_.begin(),iter);
       Features features;
-      features.set(reco::GsfElectronPtr(ele.id(),ele.get(),ele.key()),rho); //@@ Ref->Ptr
+      features.set(ele,rho);
       std::vector<float> inputs = features.get();
       return models_.at(index)->GetResponse( inputs.data() );
     } else {

@@ -59,6 +59,7 @@ namespace lowptgsfeleid {
     std::vector<std::string> modelNames() const { return names_; }
 
     double eval( const std::string& name, const reco::GsfElectronRef&, double rho ) const;
+    double eval( const std::string& name, const reco::GsfElectronPtr&, double rho ) const;
     
   private:
 
