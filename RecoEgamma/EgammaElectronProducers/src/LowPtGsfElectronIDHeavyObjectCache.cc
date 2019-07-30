@@ -45,7 +45,7 @@ namespace lowptgsfeleid {
   
   ////////////////////////////////////////////////////////////////////////////////
   //
-  void Features::set( const reco::GsfElectronRef& ele, double rho ) {
+  void Features::set( const reco::LowPtGsfElectronRef& ele, double rho ) {
     set(edm::refToPtr(ele),rho);
   }
 
@@ -143,7 +143,7 @@ namespace lowptgsfeleid {
   ////////////////////////////////////////////////////////////////////////////////
   //
   double HeavyObjectCache::eval( const std::string& name,
-				 const reco::GsfElectronRef& ele,
+				 const reco::LowPtGsfElectronRef& ele,
 				 double rho ) const
   {
     return eval(name,edm::refToPtr(ele),rho);
