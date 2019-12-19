@@ -11,7 +11,9 @@
 LowPtGsfElectronIDProducer::LowPtGsfElectronIDProducer( const edm::ParameterSet& conf,
 							const lowptgsfeleid::HeavyObjectCache* ) :
   gsfElectrons_(consumes< edm::View<reco::GsfElectron> >(conf.getParameter<edm::InputTag>("electrons"))),
+
   rho_(consumes<double>(conf.getParameter<edm::InputTag>("rho"))),
+  unbiased_(consumes< edm::ValueMap<float> >(conf.getParameter<edm::InputTag>("unbiased"))),
   names_(conf.getParameter< std::vector<std::string> >("ModelNames")),
   passThrough_(conf.getParameter<bool>("PassThrough")),
   minPtThreshold_(conf.getParameter<double>("MinPtThreshold")),
@@ -40,6 +42,11 @@ void LowPtGsfElectronIDProducer::produce( edm::Event& event, const edm::EventSet
   event.getByToken(gsfElectrons_,gsfElectrons);
   if ( !gsfElectrons.isValid() ) { edm::LogError("Problem with gsfElectrons handle"); }
 
+  // ElectronSeed unbiased BDT
+  edm::Handle< edm::ValueMap<float> > unbiasedH;
+  event.getByToken(unbiased_,unbiasedH);
+  if ( !unbiasedH.isValid() ) { edm::LogError("Problem with unbiased handle"); }
+
   // Iterate through Electrons, evaluate BDT, and store result
   std::vector< std::vector<float> > output;
   for ( unsigned int iname = 0; iname < names_.size(); ++iname ) { 
@@ -47,9 +54,15 @@ void LowPtGsfElectronIDProducer::produce( edm::Event& event, const edm::EventSet
   }
   for ( unsigned int iele = 0; iele < gsfElectrons->size(); iele++ ) {
     reco::LowPtGsfElectronRef ele(gsfElectrons,iele);
+
+    if ( ele->core().isNull() ) { continue; }
+    reco::GsfTrackRef gsf = ele->core()->gsfTrack();
+    if ( gsf.isNull() ) { continue; }
+    float unbiased = (*unbiasedH)[gsf];
+
     //if ( !passThrough_ && ( ele->pt() < minPtThreshold_ ) ) { continue; }
     for ( unsigned int iname = 0; iname < names_.size(); ++iname ) {
-      output[iname][iele] = globalCache()->eval( names_[iname], ele, *rho );
+      output[iname][iele] = globalCache()->eval( names_[iname], ele, *rho, unbiased );
     }
   }
   
@@ -71,6 +84,7 @@ void LowPtGsfElectronIDProducer::fillDescriptions( edm::ConfigurationDescription
 {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("electrons",edm::InputTag("lowPtGsfElectrons"));
+  desc.add<edm::InputTag>("unbiased",edm::InputTag("lowPtGsfElectronSeedValueMaps:unbiased"));
   desc.add<edm::InputTag>("rho",edm::InputTag("fixedGridRhoFastjetAllTmp"));
   desc.add< std::vector<std::string> >("ModelNames",std::vector<std::string>());
   desc.add< std::vector<std::string> >("ModelWeights",std::vector<std::string>());

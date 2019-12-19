@@ -39,19 +39,20 @@ namespace lowptgsfeleid {
       match_seed_dEta_,
       sc_E_,
       trk_p_,
+      unbiased_,
     };
     return output;
   }
   
   ////////////////////////////////////////////////////////////////////////////////
   //
-  void Features::set( const reco::LowPtGsfElectronRef& ele, double rho ) {
-    set(edm::refToPtr(ele),rho);
+  void Features::set( const reco::LowPtGsfElectronRef& ele, double rho, float unbiased ) {
+    set(edm::refToPtr(ele),rho,unbiased);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   //
-  void Features::set( const reco::GsfElectronPtr& ele, double rho ) {
+  void Features::set( const reco::GsfElectronPtr& ele, double rho, float unbiased ) {
 
     // KF tracks
     if ( ele->core().isNonnull() ) {
@@ -107,6 +108,9 @@ namespace lowptgsfeleid {
       brem_frac_ = ele->fbrem();
       ele_pt_ = ele->pt();
     }
+
+    // Unbiased BDT from ElectronSeed
+    unbiased_ = unbiased;
     
   };
 
@@ -144,16 +148,18 @@ namespace lowptgsfeleid {
   //
   double HeavyObjectCache::eval( const std::string& name,
 				 const reco::LowPtGsfElectronRef& ele,
-				 double rho ) const
+				 double rho,
+				 float unbiased ) const
   {
-    return eval(name,edm::refToPtr(ele),rho);
+    return eval(name,edm::refToPtr(ele),rho,unbiased);
   }
 
   ////////////////////////////////////////////////////////////////////////////////
   //
   double HeavyObjectCache::eval( const std::string& name,
 				 const reco::GsfElectronPtr& ele,
-				 double rho ) const
+				 double rho,
+				 float unbiased ) const
   {
     std::vector<std::string>::const_iterator iter = std::find( names_.begin(), 
 							       names_.end(), 
@@ -161,7 +167,7 @@ namespace lowptgsfeleid {
     if ( iter != names_.end() ) {
       int index = std::distance(names_.begin(),iter);
       Features features;
-      features.set(ele,rho);
+      features.set(ele,rho,unbiased);
       std::vector<float> inputs = features.get();
       return models_.at(index)->GetResponse( inputs.data() );
     } else {
