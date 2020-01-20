@@ -72,7 +72,6 @@ void LowPtGsfElectronIDProducer::produce( edm::Event& event, const edm::EventSet
     edm::ValueMap<float>::Filler filler(*ptr);
     filler.insert(gsfElectrons, output[iname].begin(), output[iname].end());
     filler.fill();
-    reco::LowPtGsfElectronRef ele(gsfElectrons,0);
     event.put(std::move(ptr),names_[iname]);
   }
   
