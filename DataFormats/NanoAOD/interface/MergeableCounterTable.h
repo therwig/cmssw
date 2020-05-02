@@ -4,6 +4,7 @@
 #include "FWCore/Utilities/interface/Exception.h"
 #include <vector>
 #include <string>
+#include <algorithm>
 
 namespace nanoaod {
 
@@ -97,12 +98,14 @@ class MergeableCounterTable {
 
         template<typename T>
         bool tryMerge(std::vector<T> & one, const std::vector<T> & two) {
-            if (one.size() != two.size()) return false;
-            for (unsigned int i = 0, n = one.size(); i < n; ++i) {
-                if (!one[i].compatible(two[i])) return false;
-                one[i] += two[i];
-            }
-            return true;
+	  for (auto y : two) {
+	    auto x = std::find_if(one.begin(), one.end(), [&y](const T& x) { return x.name == y.name; });
+	    if (x == one.end())
+	      one.push_back(y);
+	    else
+	      (*x) += y;
+	  }
+	  return true;
         }
 };
 
