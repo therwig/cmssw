@@ -279,7 +279,8 @@ for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016:
 
 finalElectrons = cms.EDFilter("PATElectronRefSelector",
     src = cms.InputTag("slimmedElectronsWithUserData"),
-    cut = cms.string("pt > 5 ")
+    cut = cms.string("pt > 0")
+    #cut = cms.string("pt > 5 ")
 )
 
 electronMVATTH= cms.EDProducer("EleBaseMVAValueMapProducer",
